@@ -1,0 +1,212 @@
+{
+  "name": "SolarScan · Monitoreo diario",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 8,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "f03a4f69-ae49-4cb0-8f69-ff6317a7cbda",
+      "name": "Cada día a las 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://solarscan-zuqf.onrender.com/serie/alertas",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "82deef33-71f0-4c4c-a3fe-72bc10ef34db",
+      "name": "Modelo 2 · Anomalías del día (serie temporal)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ordena los inversores con anomalía y arma el aviso con los que conviene inspeccionar primero.\nconst a = $json;\nconst lista = (a.anomalias || []).slice(0, 5);\nconst pct = v => (v * 100).toFixed(1).replace('.', ',') + ' %';\nconst lineas = lista.map((x, i) => `${i + 1}. ${x.inversor}: ${pct(x.indice_rendimiento)} de lo esperado, ${Math.round(x.perdida_kwh)} kWh no generados`);\nconst texto = [\n  `SOLARSCAN · MONITOREO DIARIO (${a.fecha})`,\n  `${a.inversores_con_anomalia} de ${a.inversores_evaluados} inversores bajo el umbral de ${pct(a.umbral)}.`,\n  `Energía no generada estimada: ${Math.round(a.perdida_total_kwh)} kWh.`, '',\n  'Inspeccionar primero (subir foto en el formulario de inspección):', ...lineas, '',\n  'Tablero: https://solarscan-zuqf.onrender.com/tablero'\n].join('\\n');\nreturn [{ json: { hay_anomalias: a.inversores_con_anomalia > 0,\n  asunto: `[SolarScan][MONITOREO] ${a.inversores_con_anomalia} inversores bajo el umbral · ${a.fecha}`, texto } }];"
+      },
+      "id": "2fe66f6e-b161-450b-9eee-605a8359c9dc",
+      "name": "Armar resumen diario",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7dfda257-96ad-48c2-88cd-42186dcb6425",
+              "leftValue": "={{ $json.hay_anomalias }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e2f8cd84-044f-45ea-adb3-908799458f7c",
+      "name": "¿Hay anomalías?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "REEMPLAZAR_CORREO_RESPONSABLE",
+        "subject": "={{ $json.asunto }}",
+        "emailType": "text",
+        "message": "={{ $json.texto }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "ae5c0cc2-4355-4cf6-ad98-1c5b712696e4",
+      "name": "Gmail · resumen diario",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        -80
+      ],
+      "webhookId": "5353bce4-5d10-4bda-8cfe-c09b4899112f",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "chatId": "REEMPLAZAR_CHAT_ID_TELEGRAM",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "2f67c0d0-9ecf-4c4b-adc5-0328cdc7b35f",
+      "name": "Telegram · resumen diario",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        960,
+        80
+      ],
+      "webhookId": "a4b362b8-5174-45b4-8001-a9ca6f299c09",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "content": "## Monitoreo diario\nCada mañana la serie temporal revisa los 22 inversores y avisa cuáles inspeccionar con foto. La fecha es la del día simulado: la semana de prueba se recorre de forma cíclica.",
+        "height": 200,
+        "width": 1240,
+        "color": 4
+      },
+      "id": "234c0e1c-b6fe-4a4d-a276-38d50c8116b0",
+      "name": "Nota 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -260
+      ]
+    }
+  ],
+  "connections": {
+    "Cada día a las 08:00": {
+      "main": [
+        [
+          {
+            "node": "Modelo 2 · Anomalías del día (serie temporal)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modelo 2 · Anomalías del día (serie temporal)": {
+      "main": [
+        [
+          {
+            "node": "Armar resumen diario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar resumen diario": {
+      "main": [
+        [
+          {
+            "node": "¿Hay anomalías?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay anomalías?": {
+      "main": [
+        [
+          {
+            "node": "Gmail · resumen diario",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram · resumen diario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": ""
+  },
+  "pinData": {},
+  "tags": []
+}

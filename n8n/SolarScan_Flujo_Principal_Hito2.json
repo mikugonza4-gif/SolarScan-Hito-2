@@ -1,0 +1,1283 @@
+{
+  "name": "SolarScan · Flujo principal Hito 2",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "SolarScan · Nueva inspección",
+        "formDescription": "Sube la foto del panel y elige el inversor al que está conectado el string. El sistema analiza la foto, la generación del inversor y el manual de O&M.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Foto del panel",
+              "fieldType": "file",
+              "requiredField": true,
+              "multipleFiles": false,
+              "acceptFileTypes": ".jpg,.jpeg,.png,.webp,.bmp"
+            },
+            {
+              "fieldLabel": "Inversor",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "INV-01"
+                  },
+                  {
+                    "option": "INV-02"
+                  },
+                  {
+                    "option": "INV-03"
+                  },
+                  {
+                    "option": "INV-04"
+                  },
+                  {
+                    "option": "INV-05"
+                  },
+                  {
+                    "option": "INV-06"
+                  },
+                  {
+                    "option": "INV-07"
+                  },
+                  {
+                    "option": "INV-08"
+                  },
+                  {
+                    "option": "INV-09"
+                  },
+                  {
+                    "option": "INV-10"
+                  },
+                  {
+                    "option": "INV-11"
+                  },
+                  {
+                    "option": "INV-12"
+                  },
+                  {
+                    "option": "INV-13"
+                  },
+                  {
+                    "option": "INV-14"
+                  },
+                  {
+                    "option": "INV-15"
+                  },
+                  {
+                    "option": "INV-16"
+                  },
+                  {
+                    "option": "INV-17"
+                  },
+                  {
+                    "option": "INV-18"
+                  },
+                  {
+                    "option": "INV-19"
+                  },
+                  {
+                    "option": "INV-20"
+                  },
+                  {
+                    "option": "INV-21"
+                  },
+                  {
+                    "option": "INV-22"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Fecha de operación",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "2020-06-11"
+                  },
+                  {
+                    "option": "2020-06-12"
+                  },
+                  {
+                    "option": "2020-06-13"
+                  },
+                  {
+                    "option": "2020-06-14"
+                  },
+                  {
+                    "option": "2020-06-15"
+                  },
+                  {
+                    "option": "2020-06-16"
+                  },
+                  {
+                    "option": "2020-06-17"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Código del inspector",
+              "fieldType": "text",
+              "requiredField": true,
+              "placeholder": "Ej.: INSP-01 (sin nombres)"
+            }
+          ]
+        },
+        "options": {
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Inspección recibida. El resultado llegará por Gmail y Telegram; si requiere una orden de trabajo, el supervisor deberá aprobarla."
+            }
+          }
+        }
+      },
+      "id": "ed448eb4-9aff-469a-af3e-ca867a42c55f",
+      "name": "Formulario de inspección",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "a9654b5e-4681-4cb5-be1e-df4e412ab771"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Valida el formulario, crea el identificador de la inspección y deja la foto con un nombre fijo.\nconst item = $input.first();\nconst j = item.json;\nconst claves = Object.keys(item.binary || {});\nif (claves.length !== 1) throw new Error('Se esperaba exactamente una foto.');\nconst inversor = String(j['Inversor'] || '').trim();\nconst fecha = String(j['Fecha de operación'] || '').trim();\nconst inspector = String(j['Código del inspector'] || '').trim().toUpperCase().slice(0, 20);\nif (!/^INV-\\d{2}$/.test(inversor)) throw new Error('Inversor inválido.');\nif (!/^\\d{4}-\\d{2}-\\d{2}$/.test(fecha)) throw new Error('Fecha inválida.');\nif (!/^[A-Z0-9-]{2,20}$/.test(inspector)) throw new Error('Use un código de inspector, no un nombre.');\nconst inspeccion_id = 'SS-' + $execution.id + '-' + Date.now().toString(36);\nreturn [{ json: { inspeccion_id, inversor, fecha, inspector, recibido_utc: new Date().toISOString() },\n          binary: { foto: item.binary[claves[0]] } }];"
+      },
+      "id": "ab66e4e8-e48f-46e9-9333-5d9195d35b15",
+      "name": "Preparar inspección",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://solarscan-zuqf.onrender.com/predict",
+        "options": {
+          "timeout": 90000
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "foto"
+            }
+          ]
+        }
+      },
+      "id": "0129379f-03b2-4bc2-8a13-95ede0255551",
+      "name": "Modelo 1 · Imágenes (EfficientNet-B0)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://solarscan-zuqf.onrender.com/serie/estado",
+        "options": {
+          "timeout": 60000
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "inversor",
+              "value": "={{ $('Preparar inspección').first().json.inversor }}"
+            },
+            {
+              "name": "fecha",
+              "value": "={{ $('Preparar inspección').first().json.fecha }}"
+            }
+          ]
+        }
+      },
+      "id": "7020206f-3305-4bf4-ab7e-8e69794f61af",
+      "name": "Modelo 2 · Serie temporal (regresión + LSTM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Consulta en lenguaje natural para el buscador semántico, a partir de las salidas de los modelos 1 y 2.\nconst img = $('Modelo 1 · Imágenes (EfficientNet-B0)').first().json;\nconst serie = $('Modelo 2 · Serie temporal (regresión + LSTM)').first().json;\nconst nombres = {'Bird-drop': 'excrementos de aves', 'Clean': 'panel limpio', 'Dusty': 'polvo acumulado',\n  'Electrical-damage': 'posible daño eléctrico, punto caliente', 'Physical-Damage': 'vidrio o marco dañado',\n  'Snow-Covered': 'nieve sobre los módulos'};\nlet q = `Panel fotovoltaico con ${nombres[img.clase] || img.clase}.`;\nif (serie.datos_suficientes && serie.anomalia) {\n  q += ` El inversor genera menos energía de la esperada (bajo rendimiento) durante ${serie.dias_consecutivos_bajo_umbral} día(s).`;\n}\nq += ' ¿Qué procedimiento de mantenimiento, limpieza o inspección corresponde?';\nreturn [{ json: { consulta: q, clase: img.clase, anomalia: Boolean(serie.anomalia), k: 3 } }];"
+      },
+      "id": "0c8aee91-084d-403c-979d-58e09b03ef6c",
+      "name": "Armar consulta al manual",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://solarscan-zuqf.onrender.com/rag/buscar",
+        "options": {
+          "timeout": 60000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "2b85ec30-d42c-4695-ba22-02dc5bb9cc10",
+      "name": "Modelo 3 · Manual O&M (embeddings / RAG)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1180,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combina las salidas de los tres modelos en un solo objeto. El LLM recibe resultados, no datos crudos.\nconst p = $('Preparar inspección').first().json;\nconst img = $('Modelo 1 · Imágenes (EfficientNet-B0)').first().json;\nconst serie = $('Modelo 2 · Serie temporal (regresión + LSTM)').first().json;\nconst rag = $json;\nreturn [{ json: {\n  inspeccion_id: p.inspeccion_id,\n  imagen: { clase: img.clase, confianza: img.confianza, revision_humana: img.revision_humana },\n  serie,\n  contexto: (rag.resultados || []).map(r => ({ id: r.id, cita: r.cita, pagina: r.pagina, texto: r.texto })),\n  metodo_rag: rag.metodo\n}}];"
+      },
+      "id": "d57c2e99-2a4b-459d-b695-97557c982199",
+      "name": "Resumen único para el LLM",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://solarscan-zuqf.onrender.com/recomendacion-integrada",
+        "options": {
+          "timeout": 120000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({inspeccion_id: $json.inspeccion_id, imagen: $json.imagen, serie: $json.serie, contexto: $json.contexto}) }}"
+      },
+      "id": "0ecc0535-bd67-48b2-91a7-6421a0472484",
+      "name": "LLM · Recomendación integrada (Gemini)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1660,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Revisa que el JSON del LLM tenga los campos exigidos y arma la fila del historial y los mensajes.\nconst r = $json;\nfor (const c of ['diagnostico', 'recomendacion', 'prioridad', 'justificacion', 'accion']) {\n  if (!r[c]) throw new Error('Falta el campo ' + c + ' en la recomendación');\n}\nif (!['ALTA', 'MEDIA', 'BAJA'].includes(r.prioridad)) throw new Error('Prioridad inválida');\nconst p = $('Preparar inspección').first().json;\nconst res = $('Resumen único para el LLM').first().json;\nconst s = res.serie || {};\nconst pct = v => (v === null || v === undefined) ? '' : (v * 100).toFixed(1).replace('.', ',') + ' %';\nconst fila = {\n  fecha_registro_utc: p.recibido_utc, inspeccion_id: p.inspeccion_id, inversor: p.inversor,\n  fecha_operacion: p.fecha, inspector: p.inspector,\n  clase_imagen: res.imagen.clase, confianza_imagen: Number(res.imagen.confianza.toFixed(4)),\n  revision_humana_imagen: res.imagen.revision_humana,\n  indice_rendimiento: s.indice_rendimiento ?? '', indice_lstm: s.indice_rendimiento_lstm ?? '',\n  anomalia_serie: s.anomalia ?? '', perdida_kwh: s.perdida_estimada_kwh ?? '',\n  dias_bajo_umbral: s.dias_consecutivos_bajo_umbral ?? '', metodo_rag: res.metodo_rag,\n  fuentes: (r.fuentes || []).join(' | '), accion: r.accion, prioridad: r.prioridad,\n  diagnostico: r.diagnostico, recomendacion: r.recomendacion, justificacion: r.justificacion,\n  generado_por: r.generado_por, controles_ok: Boolean(r.controles && r.controles.cifras_verificadas && r.controles.fuentes_verificadas),\n  requiere_aprobacion: r.requiere_aprobacion, estado_aprobacion: r.requiere_aprobacion ? 'PENDIENTE' : 'NO REQUIERE', ot_id: ''\n};\nconst pasos = (r.pasos || []).map((x, i) => `${i + 1}. ${x}`).join('\\n');\nconst cuerpo = [\n  `Inspección ${p.inspeccion_id} · ${p.inversor} · ${p.fecha}`,\n  `Foto: ${res.imagen.clase} (confianza ${pct(res.imagen.confianza)})`,\n  s.datos_suficientes ? `Generación: ${pct(s.indice_rendimiento)} de lo esperado; pérdida estimada ${s.perdida_estimada_kwh} kWh` : 'Generación: sin datos suficientes',\n  '', `PRIORIDAD: ${r.prioridad} · ACCIÓN: ${r.accion}`, '',\n  'DIAGNÓSTICO', r.diagnostico, '', 'RECOMENDACIÓN', r.recomendacion, pasos, '',\n  'JUSTIFICACIÓN', r.justificacion, '', 'FUENTES', (r.fuentes || []).join('\\n') || 'Sin fuentes del manual',\n  '', `Generado por: ${r.generado_por}. Controles de verificación: ${fila.controles_ok ? 'aprobados' : 'no aprobados (texto de respaldo)'}.`\n].join('\\n');\nreturn [{ json: { ...fila, mensaje: cuerpo, pasos } }];"
+      },
+      "id": "c8af8f0d-3dd4-454e-9952-21d8710bcc31",
+      "name": "Validar salida y preparar registro",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "93586d9e-2237-4091-9b22-797a84ba82c6",
+              "leftValue": "={{ $json.requiere_aprobacion }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4c0c1b18-a97e-46d8-b4f7-8227f97e1bec",
+      "name": "¿Requiere aprobación?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2140,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "REEMPLAZAR_CHAT_ID_TELEGRAM",
+        "message": "={{ 'SOLARSCAN · APROBACIÓN REQUERIDA\\n\\nSe propone crear una orden de trabajo.\\n\\n' + $json.mensaje + '\\n\\n¿Apruebas la orden de trabajo?' }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Aprobar OT",
+            "disapproveLabel": "Rechazar"
+          }
+        },
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "limitType": "afterTimeInterval",
+              "resumeAmount": 2,
+              "resumeUnit": "hours"
+            }
+          }
+        }
+      },
+      "id": "c77525c5-7e0c-4e37-a1a7-f6855eadcb86",
+      "name": "Aprobación humana (Telegram)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2380,
+        60
+      ],
+      "webhookId": "4a867397-147c-4aa1-9788-d3453771ec4d"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lee la respuesta del supervisor. Si no respondió en 2 horas, la orden queda sin aprobar.\nconst fila = $('Validar salida y preparar registro').first().json;\nconst aprobado = $json.data && $json.data.approved === true;\nconst sinRespuesta = !$json.data;\nconst ot_id = aprobado ? 'OT-' + fila.inspeccion_id.replace('SS-', '') : '';\nreturn [{ json: { ...fila, estado_aprobacion: aprobado ? 'APROBADA' : (sinRespuesta ? 'SIN RESPUESTA' : 'RECHAZADA'), ot_id } }];"
+      },
+      "id": "eba67ecf-afad-4a32-b4f6-140beab887b5",
+      "name": "Registrar decisión del supervisor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2620,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "65224ea3-d7a0-4db7-af6d-bb257e2b4a13",
+              "leftValue": "={{ $json.estado_aprobacion }}",
+              "rightValue": "APROBADA",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fc8d84f3-99cc-490e-922c-c02ddc29741b",
+      "name": "¿Orden aprobada?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2860,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_GOOGLE_SHEET"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "OrdenesTrabajo"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ot_id": "={{ $json.ot_id }}",
+            "inspeccion_id": "={{ $json.inspeccion_id }}",
+            "inversor": "={{ $json.inversor }}",
+            "fecha_operacion": "={{ $json.fecha_operacion }}",
+            "accion": "={{ $json.accion }}",
+            "prioridad": "={{ $json.prioridad }}",
+            "recomendacion": "={{ $json.recomendacion }}",
+            "fecha_registro_utc": "={{ $json.fecha_registro_utc }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ot_id",
+              "displayName": "ot_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "inspeccion_id",
+              "displayName": "inspeccion_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "inversor",
+              "displayName": "inversor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_operacion",
+              "displayName": "fecha_operacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "accion",
+              "displayName": "accion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "prioridad",
+              "displayName": "prioridad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recomendacion",
+              "displayName": "recomendacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_registro_utc",
+              "displayName": "fecha_registro_utc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6aaab50e-b3fb-431f-8187-003ad2ad6237",
+      "name": "Crear orden de trabajo",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3100,
+        -20
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Junta la rama con aprobación y la rama sin aprobación en un solo registro final.\nlet fila;\ntry { fila = $('Registrar decisión del supervisor').first().json; } catch (e) { fila = null; }\nif (!fila) fila = $('Validar salida y preparar registro').first().json;\nconst estado = fila.estado_aprobacion;\nconst encabezado = estado === 'APROBADA' ? `ORDEN DE TRABAJO ${fila.ot_id} APROBADA`\n  : estado === 'RECHAZADA' ? 'Orden de trabajo RECHAZADA por el supervisor'\n  : estado === 'SIN RESPUESTA' ? 'Orden de trabajo SIN APROBAR (sin respuesta en 2 horas)'\n  : 'Seguimiento: no requiere orden de trabajo';\nconst asunto = `[SolarScan][${fila.prioridad}] ${fila.accion} · ${fila.inversor} · ${encabezado.split(' (')[0]}`;\nconst texto = `SOLARSCAN · RESULTADO FINAL\\n${encabezado}\\n\\n${fila.mensaje}\\n\\nTablero: https://solarscan-zuqf.onrender.com/tablero`;\nreturn [{ json: { ...fila, asunto, texto_final: texto } }];"
+      },
+      "id": "291c631f-70e1-42e4-bf47-4d485acd208a",
+      "name": "Consolidar resultado final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3340,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REEMPLAZAR_ID_GOOGLE_SHEET"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Recomendaciones"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha_registro_utc": "={{ $json.fecha_registro_utc }}",
+            "inspeccion_id": "={{ $json.inspeccion_id }}",
+            "inversor": "={{ $json.inversor }}",
+            "fecha_operacion": "={{ $json.fecha_operacion }}",
+            "inspector": "={{ $json.inspector }}",
+            "clase_imagen": "={{ $json.clase_imagen }}",
+            "confianza_imagen": "={{ $json.confianza_imagen }}",
+            "revision_humana_imagen": "={{ $json.revision_humana_imagen }}",
+            "indice_rendimiento": "={{ $json.indice_rendimiento }}",
+            "indice_lstm": "={{ $json.indice_lstm }}",
+            "anomalia_serie": "={{ $json.anomalia_serie }}",
+            "perdida_kwh": "={{ $json.perdida_kwh }}",
+            "dias_bajo_umbral": "={{ $json.dias_bajo_umbral }}",
+            "metodo_rag": "={{ $json.metodo_rag }}",
+            "fuentes": "={{ $json.fuentes }}",
+            "accion": "={{ $json.accion }}",
+            "prioridad": "={{ $json.prioridad }}",
+            "diagnostico": "={{ $json.diagnostico }}",
+            "recomendacion": "={{ $json.recomendacion }}",
+            "justificacion": "={{ $json.justificacion }}",
+            "generado_por": "={{ $json.generado_por }}",
+            "controles_ok": "={{ $json.controles_ok }}",
+            "requiere_aprobacion": "={{ $json.requiere_aprobacion }}",
+            "estado_aprobacion": "={{ $json.estado_aprobacion }}",
+            "ot_id": "={{ $json.ot_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "fecha_registro_utc",
+              "displayName": "fecha_registro_utc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "inspeccion_id",
+              "displayName": "inspeccion_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "inversor",
+              "displayName": "inversor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_operacion",
+              "displayName": "fecha_operacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "inspector",
+              "displayName": "inspector",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "clase_imagen",
+              "displayName": "clase_imagen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confianza_imagen",
+              "displayName": "confianza_imagen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "revision_humana_imagen",
+              "displayName": "revision_humana_imagen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "indice_rendimiento",
+              "displayName": "indice_rendimiento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "indice_lstm",
+              "displayName": "indice_lstm",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "anomalia_serie",
+              "displayName": "anomalia_serie",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "perdida_kwh",
+              "displayName": "perdida_kwh",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dias_bajo_umbral",
+              "displayName": "dias_bajo_umbral",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "metodo_rag",
+              "displayName": "metodo_rag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fuentes",
+              "displayName": "fuentes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "accion",
+              "displayName": "accion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "prioridad",
+              "displayName": "prioridad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "diagnostico",
+              "displayName": "diagnostico",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recomendacion",
+              "displayName": "recomendacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "justificacion",
+              "displayName": "justificacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "generado_por",
+              "displayName": "generado_por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "controles_ok",
+              "displayName": "controles_ok",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "requiere_aprobacion",
+              "displayName": "requiere_aprobacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado_aprobacion",
+              "displayName": "estado_aprobacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ot_id",
+              "displayName": "ot_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "109cadb8-2dde-4218-af95-7d2177a82c5b",
+      "name": "Registrar en historial (Google Sheets)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3580,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "sendTo": "REEMPLAZAR_CORREO_RESPONSABLE",
+        "subject": "={{ $('Consolidar resultado final').first().json.asunto }}",
+        "emailType": "text",
+        "message": "={{ $('Consolidar resultado final').first().json.texto_final }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "3d430fef-79b3-4eb5-a237-caadad50b703",
+      "name": "Notificar por Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3820,
+        60
+      ],
+      "webhookId": "16d78733-62e6-448e-ab50-c09e1e2b671e",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "chatId": "REEMPLAZAR_CHAT_ID_TELEGRAM",
+        "text": "={{ $('Consolidar resultado final').first().json.texto_final }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "c1bb1a06-c470-463c-927d-f29b1251747f",
+      "name": "Notificar por Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3820,
+        260
+      ],
+      "webhookId": "30e99c87-d701-41c8-8a38-b926ecc38985",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Se ejecuta si un modelo o el LLM falla después de 3 intentos: avisa sin perder la inspección.\nlet p = {};\ntry { p = $('Preparar inspección').first().json; } catch (e) {}\nconst detalle = JSON.stringify($json.error || $json).slice(0, 400);\nconst texto = `SOLARSCAN · FALLA DE SERVICIO\\nInspección ${p.inspeccion_id || 's/i'} (${p.inversor || ''} ${p.fecha || ''}) no se pudo completar.\\n` +\n  `Un servicio no respondió después de 3 intentos. La foto debe revisarse manualmente.\\nDetalle técnico: ${detalle}`;\nreturn [{ json: { asunto: `[SolarScan][FALLA] Inspección ${p.inspeccion_id || ''} sin completar`, texto } }];"
+      },
+      "id": "05eecc8d-d7c9-438f-9d51-014e960182ef",
+      "name": "Aviso de falla de un servicio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1660,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "REEMPLAZAR_CORREO_RESPONSABLE",
+        "subject": "={{ $json.asunto }}",
+        "emailType": "text",
+        "message": "={{ $json.texto }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "14e77fae-e716-4058-85fa-60794ec48b1b",
+      "name": "Gmail · aviso de falla",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1900,
+        420
+      ],
+      "webhookId": "0dbdff29-45be-41b6-9786-263657433764"
+    },
+    {
+      "parameters": {
+        "chatId": "REEMPLAZAR_CHAT_ID_TELEGRAM",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "eb268a8a-ce65-4fc5-8af3-fcb5abf459be",
+      "name": "Telegram · aviso de falla",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1900,
+        560
+      ],
+      "webhookId": "e901cab8-9f66-4cac-a47b-284d8fdcbf3c"
+    },
+    {
+      "parameters": {
+        "content": "## 1. Disparador\nFormulario n8n: foto + inversor + fecha + código del inspector",
+        "height": 420,
+        "width": 480,
+        "color": 5
+      },
+      "id": "742fa982-a624-4a63-afd2-6e9766fd246e",
+      "name": "Nota 21",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2. Tres modelos (servicio Python en Render)\nImágenes → Serie temporal → Manual (RAG). Cada llamada reintenta 3 veces; si falla, sale por la rama de error.",
+        "height": 340,
+        "width": 980,
+        "color": 4
+      },
+      "id": "ea4cd79e-b26e-4bd2-8f4a-1b7e0ed0f3eb",
+      "name": "Nota 22",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3. Resumen único + LLM\nGemini recibe solo resultados. Controles: esquema JSON, cifras verificadas, fuentes verificadas, respaldo.",
+        "height": 340,
+        "width": 740,
+        "color": 6
+      },
+      "id": "c8ce350b-c0ba-436b-a8aa-3de638dd8442",
+      "name": "Nota 23",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4. Punto de control humano\nAntes de crear una orden de trabajo, el supervisor aprueba o rechaza por Telegram (espera máx. 2 h).",
+        "height": 420,
+        "width": 1180,
+        "color": 3
+      },
+      "id": "15468b53-a1ae-496c-984a-02bd3679917b",
+      "name": "Nota 24",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2120,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5. Registro y notificación\nGoogle Sheets alimenta el tablero. Resultado final por Gmail y Telegram.",
+        "height": 520,
+        "width": 700,
+        "color": 7
+      },
+      "id": "04c76c29-6785-40da-bfa1-3090be547846",
+      "name": "Nota 25",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3320,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Manejo de errores\nSi un servicio no responde, se avisa por Gmail y Telegram para revisión manual.",
+        "height": 360,
+        "width": 520,
+        "color": 2
+      },
+      "id": "da78b01e-a7aa-44f0-b1d5-04f0c4ce44ae",
+      "name": "Nota 26",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1620,
+        360
+      ]
+    }
+  ],
+  "connections": {
+    "Formulario de inspección": {
+      "main": [
+        [
+          {
+            "node": "Preparar inspección",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar inspección": {
+      "main": [
+        [
+          {
+            "node": "Modelo 1 · Imágenes (EfficientNet-B0)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modelo 1 · Imágenes (EfficientNet-B0)": {
+      "main": [
+        [
+          {
+            "node": "Modelo 2 · Serie temporal (regresión + LSTM)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso de falla de un servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modelo 2 · Serie temporal (regresión + LSTM)": {
+      "main": [
+        [
+          {
+            "node": "Armar consulta al manual",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso de falla de un servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar consulta al manual": {
+      "main": [
+        [
+          {
+            "node": "Modelo 3 · Manual O&M (embeddings / RAG)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modelo 3 · Manual O&M (embeddings / RAG)": {
+      "main": [
+        [
+          {
+            "node": "Resumen único para el LLM",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso de falla de un servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resumen único para el LLM": {
+      "main": [
+        [
+          {
+            "node": "LLM · Recomendación integrada (Gemini)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM · Recomendación integrada (Gemini)": {
+      "main": [
+        [
+          {
+            "node": "Validar salida y preparar registro",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso de falla de un servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar salida y preparar registro": {
+      "main": [
+        [
+          {
+            "node": "¿Requiere aprobación?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Requiere aprobación?": {
+      "main": [
+        [
+          {
+            "node": "Aprobación humana (Telegram)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Consolidar resultado final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aprobación humana (Telegram)": {
+      "main": [
+        [
+          {
+            "node": "Registrar decisión del supervisor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar decisión del supervisor": {
+      "main": [
+        [
+          {
+            "node": "¿Orden aprobada?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Orden aprobada?": {
+      "main": [
+        [
+          {
+            "node": "Crear orden de trabajo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Consolidar resultado final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear orden de trabajo": {
+      "main": [
+        [
+          {
+            "node": "Consolidar resultado final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidar resultado final": {
+      "main": [
+        [
+          {
+            "node": "Registrar en historial (Google Sheets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar en historial (Google Sheets)": {
+      "main": [
+        [
+          {
+            "node": "Notificar por Gmail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notificar por Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso de falla de un servicio": {
+      "main": [
+        [
+          {
+            "node": "Gmail · aviso de falla",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram · aviso de falla",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "errorWorkflow": ""
+  },
+  "pinData": {},
+  "tags": []
+}

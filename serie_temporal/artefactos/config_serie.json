@@ -1,0 +1,247 @@
+{
+  "dataset": "Kaggle anikannal/solar-power-generation-data (Plant 2)",
+  "periodo": [
+    "2020-05-15",
+    "2020-06-17"
+  ],
+  "division": {
+    "entrenamiento": [
+      "2020-05-15",
+      "2020-06-03"
+    ],
+    "validacion": [
+      "2020-06-04",
+      "2020-06-10"
+    ],
+    "prueba": [
+      "2020-06-11",
+      "2020-06-17"
+    ]
+  },
+  "g_min": 0.02,
+  "ventana": 8,
+  "caracteristicas": [
+    "IRRADIATION",
+    "MODULE_TEMPERATURE",
+    "AMBIENT_TEMPERATURE",
+    "h_sin",
+    "h_cos"
+  ],
+  "normalizacion": {
+    "media": {
+      "IRRADIATION": 0.23273697972872914,
+      "MODULE_TEMPERATURE": 32.77240792902497,
+      "AMBIENT_TEMPERATURE": 28.069399882321147
+    },
+    "desv": {
+      "IRRADIATION": 0.31269341719924326,
+      "MODULE_TEMPERATURE": 11.344033560875172,
+      "AMBIENT_TEMPERATURE": 4.061555614431977
+    }
+  },
+  "capacidad_kw": {
+    "INV-01": 1270.195,
+    "INV-02": 1253.817,
+    "INV-03": 1227.252,
+    "INV-04": 1132.943,
+    "INV-05": 1295.433,
+    "INV-06": 1216.502,
+    "INV-07": 1231.686,
+    "INV-08": 1256.559,
+    "INV-09": 1264.779,
+    "INV-10": 1202.074,
+    "INV-11": 1262.276,
+    "INV-12": 977.852,
+    "INV-13": 1243.747,
+    "INV-14": 1266.811,
+    "INV-15": 1250.997,
+    "INV-16": 1263.33,
+    "INV-17": 1220.834,
+    "INV-18": 1206.608,
+    "INV-19": 1175.961,
+    "INV-20": 1262.04,
+    "INV-21": 1281.99,
+    "INV-22": 1197.759
+  },
+  "alias": {
+    "4UPUqMRk7TRMgml": "INV-01",
+    "81aHJ1q11NBPMrL": "INV-02",
+    "9kRcWv60rDACzjR": "INV-03",
+    "Et9kgGMDl729KT4": "INV-04",
+    "IQ2d7wF4YD8zU1Q": "INV-05",
+    "LYwnQax7tkwH5Cb": "INV-06",
+    "LlT2YUhhzqhg5Sw": "INV-07",
+    "Mx2yZCDsyf6DPfv": "INV-08",
+    "NgDl19wMapZy17u": "INV-09",
+    "PeE6FRyGXUgsRhN": "INV-10",
+    "Qf4GUc1pJu5T6c6": "INV-11",
+    "Quc1TzYxW2pYoWX": "INV-12",
+    "V94E5Ben1TlhnDV": "INV-13",
+    "WcxssY2VbP4hApt": "INV-14",
+    "mqwcsP2rE7J0TFp": "INV-15",
+    "oZ35aAeoifZaQzV": "INV-16",
+    "oZZkBaNadn6DNKz": "INV-17",
+    "q49J1IKaHRwDQnt": "INV-18",
+    "rrq4fwE8jgrTyWY": "INV-19",
+    "vOuJvMaM2sgwLmb": "INV-20",
+    "xMbIugepa2P7lBB": "INV-21",
+    "xoJJ8DcxJEcupym": "INV-22"
+  },
+  "regresion": {
+    "coef": [
+      1.0959101662093875,
+      -0.009435381431942712,
+      0.03689577313336211
+    ],
+    "forma": "y = a*G + b*G*(Tmod-25) + c"
+  },
+  "lstm": {
+    "oculto": 32,
+    "lr": 0.003,
+    "mejor_epoca": 7,
+    "mse_validacion": 0.02348322793841362,
+    "busqueda": [
+      {
+        "oculto": 16,
+        "lr": 0.003,
+        "mse_val": 0.02395768091082573,
+        "epoca": 11
+      },
+      {
+        "oculto": 16,
+        "lr": 0.001,
+        "mse_val": 0.024042796343564987,
+        "epoca": 11
+      },
+      {
+        "oculto": 32,
+        "lr": 0.003,
+        "mse_val": 0.02348322793841362,
+        "epoca": 7
+      },
+      {
+        "oculto": 32,
+        "lr": 0.001,
+        "mse_val": 0.02659066952764988,
+        "epoca": 7
+      },
+      {
+        "oculto": 64,
+        "lr": 0.003,
+        "mse_val": 0.024502664804458618,
+        "epoca": 7
+      },
+      {
+        "oculto": 64,
+        "lr": 0.001,
+        "mse_val": 0.026832476258277893,
+        "epoca": 6
+      }
+    ]
+  },
+  "modelo_produccion": "Regresión lineal (clásico)",
+  "umbral_indice": 0.9,
+  "metricas_error_prueba": [
+    {
+      "modelo": "Ingenuo (día anterior)",
+      "MAE_kW": 208.89,
+      "RMSE_kW": 303.54,
+      "error_energia_diaria_%": 25.69,
+      "n": 5615
+    },
+    {
+      "modelo": "Promedio móvil 3 días",
+      "MAE_kW": 211.35,
+      "RMSE_kW": 287.63,
+      "error_energia_diaria_%": 31.9,
+      "n": 5615
+    },
+    {
+      "modelo": "Regresión lineal (clásico)",
+      "MAE_kW": 71.09,
+      "RMSE_kW": 128.68,
+      "error_energia_diaria_%": 4.01,
+      "n": 5615
+    },
+    {
+      "modelo": "LSTM (Deep Learning)",
+      "MAE_kW": 86.24,
+      "RMSE_kW": 145.8,
+      "error_energia_diaria_%": 5.08,
+      "n": 5615
+    }
+  ],
+  "metricas_deteccion_prueba": [
+    {
+      "modelo": "Ingenuo (día anterior)",
+      "precision": 0.491,
+      "recall": 0.658,
+      "f1": 0.562,
+      "falsas_alarmas": 82.0,
+      "fallas_no_detectadas": 41.0,
+      "n_dias": 339.0
+    },
+    {
+      "modelo": "Promedio móvil 3 días",
+      "precision": 0.572,
+      "recall": 0.792,
+      "f1": 0.664,
+      "falsas_alarmas": 71.0,
+      "fallas_no_detectadas": 25.0,
+      "n_dias": 339.0
+    },
+    {
+      "modelo": "Regresión lineal (clásico)",
+      "precision": 0.984,
+      "recall": 1.0,
+      "f1": 0.992,
+      "falsas_alarmas": 2.0,
+      "fallas_no_detectadas": 0.0,
+      "n_dias": 339.0
+    },
+    {
+      "modelo": "LSTM (Deep Learning)",
+      "precision": 1.0,
+      "recall": 0.975,
+      "f1": 0.987,
+      "falsas_alarmas": 0.0,
+      "fallas_no_detectadas": 3.0,
+      "n_dias": 339.0
+    }
+  ],
+  "f1_validacion_por_umbral": {
+    "Ingenuo (día anterior)": {
+      "0.75": 0.508,
+      "0.8": 0.537,
+      "0.85": 0.537,
+      "0.9": 0.613,
+      "0.95": 0.629
+    },
+    "Promedio móvil 3 días": {
+      "0.75": 0.646,
+      "0.8": 0.691,
+      "0.85": 0.746,
+      "0.9": 0.776,
+      "0.95": 0.774
+    },
+    "Regresión lineal (clásico)": {
+      "0.75": 0.809,
+      "0.8": 0.841,
+      "0.85": 0.88,
+      "0.9": 0.95,
+      "0.95": 0.912
+    },
+    "LSTM (Deep Learning)": {
+      "0.75": 0.817,
+      "0.8": 0.833,
+      "0.85": 0.849,
+      "0.9": 0.937,
+      "0.95": 0.911
+    }
+  },
+  "anomalias_reales_prueba": {
+    "dias_inversor": 154,
+    "marcados": 31,
+    "perdida_kwh": 94740.2
+  }
+}

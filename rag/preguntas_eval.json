@@ -1,0 +1,34 @@
+{
+  "descripcion": "Preguntas de evaluación del buscador. Cada una corresponde a una situación que el flujo puede generar (condición visual de la foto y/o anomalía de generación). Un fragmento se considera relevante si contiene al menos un término de CADA grupo del criterio (juicio de relevancia por reglas explícitas, definido antes de ejecutar los buscadores).",
+  "en_alcance": [
+    {"pregunta": "¿Cada cuánto conviene limpiar paneles con polvo acumulado?", "clase": "Dusty", "anomalia": false,
+     "criterio": [["clean", "wash"], ["soil", "dust", "dirt"]]},
+    {"pregunta": "¿Cómo afecta la suciedad acumulada a la energía que produce la planta?", "clase": "Dusty", "anomalia": true,
+     "criterio": [["soil", "dust", "dirt"], ["loss", "energy", "production", "output", "yield"]]},
+    {"pregunta": "¿Qué se hace con los excrementos de aves sobre los módulos?", "clase": "Bird-drop", "anomalia": false,
+     "criterio": [["bird"], ["dropping", "soil", "clean", "nest", "waste"]]},
+    {"pregunta": "¿Qué hacer cuando la nieve cubre los paneles solares?", "clase": "Snow-Covered", "anomalia": false,
+     "criterio": [["snow"]]},
+    {"pregunta": "¿Cómo se inspecciona un módulo con el vidrio quebrado o el marco dañado?", "clase": "Physical-Damage", "anomalia": false,
+     "criterio": [["crack", "broken", "glass", "breakage", "damaged"], ["module", "panel"]]},
+    {"pregunta": "¿Cuándo se debe reemplazar un módulo fotovoltaico dañado?", "clase": "Physical-Damage", "anomalia": true,
+     "criterio": [["replace", "replacement", "spare"], ["module", "panel"]]},
+    {"pregunta": "¿Para qué sirve la termografía infrarroja en la detección de puntos calientes?", "clase": "Electrical-damage", "anomalia": false,
+     "criterio": [["infrared", "thermograph", "thermal", "ir imag", "ir camera"], ["hot spot", "hotspot", "module", "inspect", "connection"]]},
+    {"pregunta": "Un inversor genera menos energía que los demás, ¿cómo se diagnostica la falla?", "clase": "Clean", "anomalia": true,
+     "criterio": [["inverter"], ["fault", "performance", "underperform", "alarm", "troubleshoot", "failure"]]},
+    {"pregunta": "¿Qué tareas de mantenimiento preventivo se recomiendan para los inversores?", "clase": "Clean", "anomalia": true,
+     "criterio": [["inverter"], ["preventive", "maintenance", "filter", "schedule", "service"]]},
+    {"pregunta": "¿Qué revisar si un string completo deja de producir energía?", "clase": "Electrical-damage", "anomalia": true,
+     "criterio": [["string", "combiner", "fuse"], ["fault", "open", "test", "troubleshoot", "failure", "repair"]]},
+    {"pregunta": "¿Cada cuánto deben inspeccionarse visualmente los módulos?", "clase": "Clean", "anomalia": false,
+     "criterio": [["visual"], ["inspect"]]},
+    {"pregunta": "¿Qué precauciones de seguridad eléctrica deben seguir los técnicos al intervenir?", "clase": "Electrical-damage", "anomalia": false,
+     "criterio": [["safety", "arc flash", "ppe", "lockout", "70e", "hazard"]]}
+  ],
+  "fuera_de_alcance": [
+    "¿Cuál es la tarifa eléctrica residencial vigente en Santiago?",
+    "¿Qué receta de cocina usa paltas y tomates?",
+    "¿Quién ganó el campeonato nacional de fútbol el año pasado?"
+  ]
+}

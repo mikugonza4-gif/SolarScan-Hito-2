@@ -1,0 +1,17 @@
+{
+  "README.md": "e4971e2507285c3a8f398d7dfd1a86206fb90a388385f7b07ab4eb674072cd3e",
+  "api_solar.py": "4c935539d884c3808cec2931c1e834c1a4694d7b91b9cc17535f14af74fd1931",
+  "entorno_exportacion.json": "b6bb2ad54617a8b6c38f8aa4447857bf9d44be760f4c494ea8e9189ca3e7a235",
+  "inferencia_solar.py": "3e68669d91c1bd08f6ffc71a298c035ce6647e12ea4854d62c766f00e3c18e21",
+  "recomendacion_gemini.py": "69b6fc18ad1fb73cceb4c7543fe07b0a2b421cd0730a26af91319388a3f7fa83",
+  "modelo/config.json": "267cd89861751b94aad0b81d3352d13e288fe1c2d870f1cafb0726912f4ade00",
+  "modelo/efficientnet_b0_solar.pt": "7917aa54e21aa849f17039d48329bba14f8fcbb1c39e3154b315770e502e3b77",
+  "requirements.txt": "8c814d029929f52a0549abf21d2669f652f1fe0b5497225ebf523660a1536e94",
+  "test_api.py": "4bca964204c1e523e913e43ac587706928a291284dd7b7f5fcfd13c8629d583b",
+  "test_recomendacion.py": "c23ca2a044f0055691cc4a3e71926faee47026b6eb27ee2483ec50e3d6afaf45",
+  "verificacion_servicio.json": "d630c2aabb3a990edcc021560244553df9502a00411bd6b3ff5f4575128cffc2",
+  "recomendacion_integrada.py": "de7514816cebddd3d1d3849fc06853764635a5a87329801c57872c67bd3afc9c",
+  "interfaz_solar.py": "36ee60fd5d1a4d8c9e7bdb451a3f83797837ff4176d39c892ca37aba6616f3ad",
+  "serie_temporal/servicio_serie.py": "aaad818a42b4c03ccae6f4a59c255b306ff456d3d69286b34c44d3a7e94c4c69",
+  "rag/rag_solar.py": "79079045afcc0d6ad15f3422291f994b2df13d2fadd20ca7be673ad857928a73"
+}

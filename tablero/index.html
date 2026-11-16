@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SolarScan · Tablero de operación</title>
+<link rel="stylesheet" href="/tablero-archivos/tablero.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div><b>SolarScan<span>.</span></b><p>Tablero de operación y mantenimiento · Planta 2</p></div>
+    <a class="enlace" href="/">Inspección de imágenes</a>
+  </div>
+</header>
+<main>
+  <section class="intro-tablero">
+    <span class="eyebrow">Qué decidir hoy</span>
+    <h1>¿Qué inversor atender primero?</h1>
+    <p class="lead">El tablero reúne los tres modelos: el rendimiento de cada inversor (serie temporal), la condición visual de los paneles (imágenes) y las recomendaciones con fuentes del manual que aprobó o rechazó el supervisor.</p>
+  </section>
+
+  <div class="filtros" role="group" aria-label="Filtros">
+    <label>Desde <input type="date" id="f-desde"></label>
+    <label>Hasta <input type="date" id="f-hasta"></label>
+    <label>Inversor <select id="f-inversor"><option value="">Todos</option></select></label>
+    <label>Prioridad <select id="f-prioridad"><option value="">Todas</option><option>ALTA</option><option>MEDIA</option><option>BAJA</option></select></label>
+    <label>Condición visual <select id="f-clase"><option value="">Todas</option></select></label>
+    <button id="f-reset" type="button">Restablecer</button>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><span class="kpi-label">Energía no generada detectada</span><span class="kpi-valor" id="k-perdida">–</span><span class="kpi-nota">kWh en días con anomalía</span></div>
+    <div class="kpi"><span class="kpi-label">Días-inversor con anomalía</span><span class="kpi-valor" id="k-anom">–</span><span class="kpi-nota" id="k-anom-nota">índice bajo el umbral</span></div>
+    <div class="kpi"><span class="kpi-label">Inspecciones registradas</span><span class="kpi-valor" id="k-insp">–</span><span class="kpi-nota" id="k-insp-nota">desde el flujo n8n</span></div>
+    <div class="kpi"><span class="kpi-label">Órdenes de trabajo</span><span class="kpi-valor" id="k-ot">–</span><span class="kpi-nota" id="k-ot-nota">aprobadas por el supervisor</span></div>
+  </div>
+
+  <div class="paneles">
+    <article class="panel ancho">
+      <h2>Índice de rendimiento diario</h2>
+      <p class="sub" id="sub-indice">Energía real / energía esperada según irradiancia. Bajo 90 % se marca anomalía.</p>
+      <div class="lienzo"><canvas id="g-indice" role="img" aria-label="Índice de rendimiento diario"></canvas></div>
+    </article>
+    <article class="panel">
+      <h2>Energía no generada por día</h2>
+      <p class="sub">kWh, solo días con anomalía (modelo de regresión)</p>
+      <div class="lienzo"><canvas id="g-perdida" role="img" aria-label="Energía no generada por día"></canvas></div>
+    </article>
+    <article class="panel">
+      <h2>Recomendaciones por prioridad</h2>
+      <p class="sub">Registradas por el flujo, según fecha de operación</p>
+      <div class="lienzo"><canvas id="g-prioridad" role="img" aria-label="Recomendaciones por prioridad"></canvas></div>
+      <p class="aviso" id="aviso-registros" hidden></p>
+    </article>
+    <article class="panel ancho">
+      <h2>Mapa de rendimiento por inversor</h2>
+      <p class="sub">Cada celda es un día. Más oscuro = mayor pérdida. Pasa el cursor para ver el valor.</p>
+      <div class="mapa-envoltura"><table class="mapa" id="mapa"></table></div>
+      <div class="leyenda-mapa"><span>≥ 90 % (normal)</span><i style="background:#eef2ee"></i><i style="background:#f6c9b8"></i><i style="background:#ec835a"></i><i style="background:#d03b3b"></i><i style="background:#8f1f1f"></i><span>≤ 30 %</span></div>
+    </article>
+    <article class="panel ancho">
+      <h2>Registro de recomendaciones del LLM</h2>
+      <p class="sub">Diagnóstico integrado, fuentes citadas y decisión del supervisor</p>
+      <div class="tabla-envoltura">
+        <table class="registro">
+          <thead><tr><th>Fecha op.</th><th>Inversor</th><th>Foto</th><th>Índice</th><th>Prioridad</th><th>Acción</th><th>Aprobación</th><th>Fuentes</th><th>Controles</th></tr></thead>
+          <tbody id="t-registro"><tr><td colspan="9">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </article>
+  </div>
+  <footer>SolarScan · Hito 2 · Datos de generación: planta 2 del dataset público de Kaggle (mayo–junio 2020), reproducidos día a día. Los índices se calculan con el modelo de regresión elegido en validación; la LSTM se muestra como segunda opinión.</footer>
+</main>
+<div id="tooltip" role="tooltip" hidden></div>
+<script src="/tablero-archivos/tablero.js"></script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+{
+  "name": "SolarScan · Avisos de error",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "f2be4cac-6181-4cb0-a510-bcb98007d61a",
+      "name": "Error en el flujo principal",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Resume el error de cualquier ejecución fallida del flujo principal.\nconst e = $json.execution || {};\nconst texto = `SOLARSCAN · ERROR DEL FLUJO\\nNodo: ${e.lastNodeExecuted || 's/i'}\\nMensaje: ${(e.error && e.error.message) || 's/i'}\\nEjecución: ${e.id || ''} ${e.url || ''}`;\nreturn [{ json: { asunto: '[SolarScan][ERROR] Falla en el flujo principal', texto } }];"
+      },
+      "id": "9e00e2b0-dee6-4185-a036-962d86e720b1",
+      "name": "Armar aviso de error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "REEMPLAZAR_CORREO_RESPONSABLE",
+        "subject": "={{ $json.asunto }}",
+        "emailType": "text",
+        "message": "={{ $json.texto }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "24e0e1d6-db3f-4102-b016-e1b03eb47840",
+      "name": "Gmail · error del flujo",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        -80
+      ],
+      "webhookId": "21af96b6-0571-4d3f-a493-7fbe30890b0e"
+    },
+    {
+      "parameters": {
+        "chatId": "REEMPLAZAR_CHAT_ID_TELEGRAM",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "e659891d-a664-431b-9df7-56343e9c8239",
+      "name": "Telegram · error del flujo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        80
+      ],
+      "webhookId": "78e4d485-01da-40bf-92bb-0655c295f9c1"
+    }
+  ],
+  "connections": {
+    "Error en el flujo principal": {
+      "main": [
+        [
+          {
+            "node": "Armar aviso de error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar aviso de error": {
+      "main": [
+        [
+          {
+            "node": "Gmail · error del flujo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram · error del flujo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "tags": []
+}
