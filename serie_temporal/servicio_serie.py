@@ -18,12 +18,19 @@ import gzip
 import json
 import math
 import threading
+from functools import lru_cache
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import numpy as np
 import torch
 from torch import nn
+
+# La instancia gratuita de Render dispone de 512 MB. La aceleración oneDNN/MKLDNN
+# de las LSTM en CPU puede reservar buffers temporales grandes. Estos modelos
+# procesan secuencias pequeñas, por lo que priorizamos el consumo de RAM.
+torch.set_num_threads(1)
+torch.backends.mkldnn.enabled = False
 
 RAIZ = Path(__file__).resolve().parent
 PASO_HORAS = 0.25            # registros cada 15 minutos
@@ -115,7 +122,13 @@ class ServicioSerie:
 
     # --------------------------------------------------------------- modelos
     def _esperado(self, idxs):
-        """Potencia esperada normalizada (0-1) por regresión y por LSTM en los intervalos dados."""
+        """Reutiliza previsiones con iguales intervalos (independientes del inversor)."""
+        return self._esperado_cache(tuple(map(int, idxs)))
+
+    @lru_cache(maxsize=64)
+    def _esperado_cache(self, posiciones):
+        """Potencia esperada normalizada (0-1) por regresión y LSTM."""
+        idxs = np.asarray(posiciones, dtype=np.intp)
         G = self.G[idxs]; T = self.Tm[idxs]
         reg = np.clip(self.coef[0] * G + self.coef[1] * G * (T - 25) + self.coef[2], 0, None)
         pos = np.clip(idxs, self.ventana - 1, None)
@@ -131,7 +144,9 @@ class ServicioSerie:
         idxs = np.arange(ini, ini + 96)
         return idxs[(self.G[idxs] > self.g_min) & ~np.isnan(self.G[idxs])]
 
+    @lru_cache(maxsize=256)
     def _indice(self, inv, d):
+        """El dataset es fijo: evita repetir LSTM para el mismo inversor y día."""
         idxs = self._idx_dia(d)
         real = self.ac[inv][idxs]
         ok = ~np.isnan(real)
